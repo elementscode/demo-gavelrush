@@ -1,0 +1,138 @@
+import "./style.css";
+import { LiveView } from "@elements/app";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { SiteHeader } from "#app/shared/templates/site-header";
+import { LotRow, Clock, startClock, coverPhoto, money, isClosed, isClosingSoon, remainingMs, countdown } from "#app/shared/lot";
+
+interface Totals {
+  raised: number;
+  collected: number;
+  outstanding: number;
+  live: number;
+  sold: number;
+  paid: number;
+}
+
+/** Raised is every winning bid on a closed lot; collected is what has been paid. */
+function totals(lots: LiveView<LotRow>): Totals {
+  let t: Totals = { raised: 0, collected: 0, outstanding: 0, live: 0, sold: 0, paid: 0 };
+
+  for (let l of lots) {
+    if (l.status === "closed" && l.winnerId) {
+      t.raised += l.currentBid ?? 0;
+      t.sold += 1;
+
+      if (l.paymentStatus === "paid") {
+        t.collected += l.currentBid ?? 0;
+        t.paid += 1;
+      } else {
+        t.outstanding += l.currentBid ?? 0;
+      }
+    } else if (l.status === "open") {
+      t.live += l.currentBid ?? 0;
+    }
+  }
+
+  return t;
+}
+
+<html lang="en" class="page-admin" (
+  lots: LiveView<LotRow>,
+  serverNow: Date,
+  private clock: Clock = { now: +serverNow, skew: 0 },
+) oninit={() => startClock(clock, serverNow)}>
+  <head>
+    <title>Results · gavelrush</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <div class="app">
+      <SiteHeader current="results" />
+
+      <main class="page-shell admin-page stack is-xl">
+        <div class="admin-head cluster">
+          <div class="stack is-xs">
+            <p class="eyebrow">Admin</p>
+            <h1>Results</h1>
+          </div>
+          <div class="cluster is-sm">
+            <a class="button is-primary" href="/admin/lots/new">New lot</a>
+          </div>
+        </div>
+
+        <div class="admin-stats">
+          <div class="admin-stat is-hero card">
+            <div class="card-body stack is-xs">
+              <span class="admin-stat-label">Total raised</span>
+              <span class="admin-stat-value">{money(totals(lots).raised)}</span>
+              <span class="admin-stat-label">{totals(lots).sold} of {lots.length} lots sold</span>
+            </div>
+          </div>
+          <div class="admin-stat card">
+            <div class="card-body stack is-xs">
+              <span class="admin-stat-label">Collected</span>
+              <span class="admin-stat-value">{money(totals(lots).collected)}</span>
+              <span class="admin-stat-label">{totals(lots).paid} paid by card</span>
+            </div>
+          </div>
+          <div class="admin-stat card">
+            <div class="card-body stack is-xs">
+              <span class="admin-stat-label">Awaiting payment</span>
+              <span class="admin-stat-value">{money(totals(lots).outstanding)}</span>
+              <span class="admin-stat-label">{totals(lots).sold - totals(lots).paid} {totals(lots).sold - totals(lots).paid === 1 ? "winner" : "winners"} to pay</span>
+            </div>
+          </div>
+          <div class="admin-stat card">
+            <div class="card-body stack is-xs">
+              <span class="admin-stat-label">Bid on open lots</span>
+              <span class="admin-stat-value">{money(totals(lots).live)}</span>
+              <span class="admin-stat-label">{lots.filter((l) => l.status === "open").length} lots still open</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-wrap card">
+          <table class="results">
+            <thead>
+              <tr>
+                <th>Lot</th>
+                <th>Status</th>
+                <th>Winner</th>
+                <th class="num">Bids</th>
+                <th class="num">Amount</th>
+                <th>Payment</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr e:for={lot of lots.sort((a, b) => a.number - b.number)}>
+                <td>
+                  <a class="lot-cell row" href={`/lots/${lot.id}`}>
+                    <img src={coverPhoto(lot)} alt="" width="48" height="36">
+                    <span>{lot.number}. {lot.title}</span>
+                  </a>
+                </td>
+                <td>
+                  <span e:if={lot.status === "closed"} class="pill">Closed</span>
+                  <span e:elseif={isClosed(lot, clock.now)} class="pill is-warning">Closing</span>
+                  <span e:elseif={isClosingSoon(lot, clock.now)} class="pill is-danger"><span class="pill-dot"></span>{countdown(remainingMs(lot, clock.now))}</span>
+                  <span e:else class="pill is-info">{countdown(remainingMs(lot, clock.now))}</span>
+                </td>
+                <td>
+                  <span e:if={lot.status === "closed"}>{lot.winnerName ?? "No bids"}</span>
+                  <span e:else class="dim">{lot.topBidderName ? `Leading: ${lot.topBidderName}` : "No bids yet"}</span>
+                </td>
+                <td class="num">{lot.bidCount}</td>
+                <td class="num">{money(lot.currentBid)}</td>
+                <td>
+                  <span e:if={lot.paymentStatus === "paid"} class="pill is-success"><span class="pill-dot"></span>Paid</span>
+                  <span e:elseif={lot.paymentStatus === "unpaid"} class="pill is-warning"><span class="pill-dot"></span>Awaiting payment</span>
+                  <span e:else class="dim">–</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
