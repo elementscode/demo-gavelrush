@@ -1,0 +1,197 @@
+import "./style.css";
+import { File, FieldErrors, ValidationError, redirect, sql, tx } from "@elements/app";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { SiteHeader } from "#app/shared/templates/site-header";
+import { isUserAdminOrThrow } from "#app/shared/services/auth";
+
+const ALLOWED = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+export interface NewLot {
+  title: string;
+  description: string;
+  startingBid: number;
+  increment: number;
+  closesAt: Date;
+  photos: File[];
+}
+
+interface LotForm {
+  title: string;
+  description: string;
+  startingBid: string;
+  increment: string;
+  closesAt: string;
+  photos: File[];
+  errors: FieldErrors<LotForm>;
+  saving: boolean;
+}
+
+/** @rpc */
+export function createLot(lot: NewLot): string {
+  isUserAdminOrThrow();
+
+  let errors: FieldErrors<NewLot> = {};
+
+  if (!lot.title.trim()) {
+    errors.title = ["Give the lot a title."];
+  }
+
+  if (!Number.isInteger(lot.startingBid) || lot.startingBid < 1) {
+    errors.startingBid = ["Enter a whole-dollar amount of at least $1."];
+  }
+
+  if (!Number.isInteger(lot.increment) || lot.increment < 1) {
+    errors.increment = ["Enter a whole-dollar amount of at least $1."];
+  }
+
+  if (!(lot.closesAt instanceof Date) || isNaN(+lot.closesAt) || +lot.closesAt < Date.now() + 60_000) {
+    errors.closesAt = ["Pick a close time in the future."];
+  }
+
+  if (lot.photos.length === 0) {
+    errors.photos = ["Add at least one photo."];
+  } else if (lot.photos.some((f) => !ALLOWED.includes(f.contentType))) {
+    errors.photos = ["Photos must be PNG, JPEG, GIF or WebP images."];
+  } else if (lot.photos.some((f) => f.size > MAX_PHOTO_BYTES)) {
+    errors.photos = ["Each photo must be under 5 MB."];
+  }
+
+  if (Object.keys(errors).length > 0) {
+    throw new ValidationError(errors);
+  }
+
+  return tx(() => {
+    let row = sql<{ id: string }>(`
+      insert into lots (title, description, startingBid, increment, closesAt)
+           values (${lot.title.trim()}, ${lot.description.trim()}, ${lot.startingBid}, ${lot.increment}, ${lot.closesAt})
+      returning id
+    `).firstOrThrow();
+
+    lot.photos.forEach((f, i) => {
+      sql(`
+        insert into lotPhotos (lotId, position, name, contentType, data)
+             values (${row.id}, ${i}, ${f.name}, ${f.contentType}, ${f.data})
+      `);
+    });
+
+    return row.id;
+  });
+}
+
+function toLocalInput(date: Date): string {
+  let local = new Date(+date - date.getTimezoneOffset() * 60_000);
+
+  return local.toISOString().slice(0, 16);
+}
+
+function wholeDollars(value: string): number {
+  return Number(value.replace(/[$,\s]/g, ""));
+}
+
+function onSubmit(form: LotForm) {
+  form.errors = {};
+  form.saving = true;
+
+  try {
+    let id = createLot({
+      title: form.title,
+      description: form.description,
+      startingBid: wholeDollars(form.startingBid),
+      increment: wholeDollars(form.increment),
+      closesAt: new Date(form.closesAt),
+      photos: form.photos,
+    });
+
+    redirect(`/lots/${id}`);
+  } catch (err: any) {
+    form.errors = (err instanceof ValidationError && err.errors ? err.errors : { title: [err.message] }) as FieldErrors<LotForm>;
+    form.saving = false;
+  }
+}
+
+function previewUrl(file: File): string {
+  return URL.createObjectURL(new Blob([file.data as BlobPart], { type: file.contentType }));
+}
+
+<html lang="en" class="page-admin-new-lot" (
+  serverNow: Date,
+  private form: LotForm = {
+    title: "",
+    description: "",
+    startingBid: "",
+    increment: "",
+    closesAt: toLocalInput(new Date(+serverNow + 3 * 86400_000)),
+    photos: [],
+    errors: {},
+    saving: false,
+  },
+)>
+  <head>
+    <title>New lot · gavelrush</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <div class="app">
+      <SiteHeader current="new-lot" />
+
+      <main class="page-shell is-form new-lot-page stack is-xl">
+        <div class="stack is-xs">
+          <p class="eyebrow">Admin</p>
+          <h1>New lot</h1>
+          <p class="lede">It goes live the moment you save it.</p>
+        </div>
+
+        <form class="card" onsubmit={() => onSubmit(form)}>
+          <div class="card-body stack is-lg">
+            <div class="field">
+              <label for="title">Title</label>
+              <input id="title" name="title" value={form.title} placeholder="Weekend at a mountain lodge" class={form.errors.title && "is-error"} required>
+              <p e:if={form.errors.title} class="hint is-error">{form.errors.title?.[0]}</p>
+            </div>
+
+            <div class="field">
+              <label for="description">Description</label>
+              <textarea id="description" name="description" rows="5" value={form.description} placeholder="What the winner gets, who donated it, and any conditions."></textarea>
+            </div>
+
+            <div class="field">
+              <label for="photos">Photos</label>
+              <input id="photos" name="photos" type="file" multiple accept="image/png,image/jpeg,image/gif,image/webp" value={form.photos} class={form.errors.photos && "is-error"}>
+              <p e:if={form.errors.photos} class="hint is-error">{form.errors.photos?.[0]}</p>
+              <p e:else class="hint">The first photo is the cover. Up to 5 MB each.</p>
+              <div e:if={form.photos.length > 0} class="photo-previews">
+                <img e:for={f of form.photos.map((f) => ({ id: f.name + f.size, f }))} src={previewUrl(f.f)} alt={f.f.name} width="96" height="80">
+              </div>
+            </div>
+
+            <div class="row is-start" style="gap: var(--space-4)">
+              <div class="field" style="flex: 1">
+                <label for="startingBid">Starting bid ($)</label>
+                <input id="startingBid" name="startingBid" inputmode="numeric" value={form.startingBid} placeholder="250" class={form.errors.startingBid && "is-error"} required>
+                <p e:if={form.errors.startingBid} class="hint is-error">{form.errors.startingBid?.[0]}</p>
+              </div>
+              <div class="field" style="flex: 1">
+                <label for="increment">Bid increment ($)</label>
+                <input id="increment" name="increment" inputmode="numeric" value={form.increment} placeholder="25" class={form.errors.increment && "is-error"} required>
+                <p e:if={form.errors.increment} class="hint is-error">{form.errors.increment?.[0]}</p>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="closesAt">Closes at</label>
+              <input id="closesAt" name="closesAt" type="datetime-local" value={form.closesAt} class={form.errors.closesAt && "is-error"} required>
+              <p e:if={form.errors.closesAt} class="hint is-error">{form.errors.closesAt?.[0]}</p>
+              <p e:else class="hint">In your local time. A bid in the last two minutes adds two more.</p>
+            </div>
+          </div>
+
+          <div class="card-foot">
+            <a class="button is-ghost" href="/admin">Cancel</a>
+            <button type="submit" class="is-primary" disabled={form.saving}>{form.saving ? "Saving…" : "Create lot"}</button>
+          </div>
+        </form>
+      </main>
+    </div>
+  </body>
+</html>

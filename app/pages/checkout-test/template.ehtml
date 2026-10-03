@@ -1,0 +1,92 @@
+import "./style.css";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { redirect } from "@elements/app";
+import { SiteHeader } from "#app/shared/templates/site-header";
+import { money, photoUrl } from "#app/shared/lot";
+import { payTestLot, TestCheckoutLot } from "./services";
+
+interface PayState {
+  busy: boolean;
+  error: string;
+}
+
+async function onPay(state: PayState, lotId: string) {
+  state.busy = true;
+  state.error = "";
+
+  try {
+    await payTestLot(lotId);
+    redirect(`/lots/${lotId}`);
+  } catch (err: any) {
+    state.error = err.message;
+    state.busy = false;
+  }
+}
+
+<html lang="en" class="page-checkout-test" (
+  lot: TestCheckoutLot,
+  private pay: PayState = { busy: false, error: "" },
+)>
+  <head>
+    <title>{`Checkout · Lot ${lot.number} · gavelrush`}</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <div class="app">
+      <SiteHeader />
+
+      <main class="page-shell checkout-page">
+        <div class="checkout card">
+          <section class="checkout-summary stack is-lg">
+            <a class="checkout-back link-muted" href={`/lots/${lot.id}`}>← Back to the lot</a>
+
+            <div class="stack is-xs">
+              <span class="checkout-label">Pay gavelrush</span>
+              <span class="checkout-total">{money(lot.amount)}</span>
+            </div>
+
+            <div class="checkout-line">
+              <img e:if={lot.photo} class="checkout-photo" src={photoUrl(lot.photo!)} alt="" width="96" height="96">
+              <div class="checkout-line-text stack is-xs">
+                <span class="checkout-line-title">Lot {lot.number}: {lot.title}</span>
+                <span class="checkout-label">Winning bid · {lot.bidCount} {lot.bidCount === 1 ? "bid" : "bids"}</span>
+              </div>
+              <span class="checkout-line-amount">{money(lot.amount)}</span>
+            </div>
+
+            <dl class="checkout-totals">
+              <div class="row">
+                <dt>Subtotal</dt>
+                <dd>{money(lot.amount)}</dd>
+              </div>
+              <div class="row is-total">
+                <dt>Total due</dt>
+                <dd>{money(lot.amount)}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="checkout-pay stack is-lg">
+            <div class="stack is-sm">
+              <span class="pill is-warning checkout-badge"><span class="pill-dot"></span>Test mode</span>
+              <h1 class="checkout-title">Confirm your payment</h1>
+              <p class="checkout-sub">This test checkout records the payment the way Stripe would, so the lot is marked paid everywhere it shows. No card is charged.</p>
+            </div>
+
+            <p e:if={pay.error} class="callout is-danger" role="alert">{pay.error}</p>
+
+            <div class="stack is-sm">
+              <button class="is-primary is-block is-lg" disabled={pay.busy} onclick={() => onPay(pay, lot.id)}>
+                {pay.busy ? "Paying…" : `Pay ${money(lot.amount)}`}
+              </button>
+              <a class="button is-ghost is-block" href={`/lots/${lot.id}`}>Cancel</a>
+            </div>
+
+            <p class="checkout-note">Add <code>STRIPE_SECRET_KEY</code> to <code>config/env/development.env</code> and this button opens real Stripe Checkout instead.</p>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

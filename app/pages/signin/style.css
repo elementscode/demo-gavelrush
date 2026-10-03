@@ -1,0 +1,27 @@
+@import "#app/shared/styles/page.css";
+
+.demo-logins {
+  gap: var(--space-1);
+}
+
+.demo-login {
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+}
+
+.demo-login-email {
+  color: var(--ink-dim);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.demo-login-name {
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.demo-login {
+  flex-wrap: wrap;
+  row-gap: 0;
+}

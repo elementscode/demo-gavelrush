@@ -1,0 +1,18 @@
+import "./style.css";
+import art from "#app/shared/assets/lots/painting-2.jpg";
+
+/** The two-column frame sign in and sign up share: artwork beside the form. */
+<AuthShell>
+  <main class="auth-page">
+    <div class="auth-art">
+      <img src={art} alt="" width="900" height="1200">
+      <div class="auth-art-copy stack is-sm">
+        <h2>Twelve donated lots. One good cause.</h2>
+        <p>Bid live all week. Every dollar raised goes to the charity.</p>
+      </div>
+    </div>
+    <div class="auth-panel stack">
+      <slot/>
+    </div>
+  </main>
+</AuthShell>

@@ -1,0 +1,40 @@
+import "./style.css";
+import { session, redirect } from "@elements/app";
+import { signout } from "#app/shared/services/auth";
+
+function onSignout() {
+  signout();
+  redirect("/");
+}
+
+<SiteHeader (current: string = "")>
+  <header class="site-header">
+    <div class="page-shell row site-header-inner">
+      <a class="site-brand row" href="/">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m14 13-7.5 7.5a2.12 2.12 0 0 1-3-3L11 10"/>
+          <path d="m16 16 6-6"/>
+          <path d="m8 8 6-6"/>
+          <path d="m9 7 8 8"/>
+          <path d="m21 11-8-8"/>
+        </svg>
+        gavelrush
+      </a>
+
+      <nav class="site-nav cluster is-md">
+        <a class="link-muted is-wide-only" href="/" aria-current={current === "lots" ? "page" : undefined}>Lots</a>
+        <a e:if={session.get("role") === "admin"} class="link-muted" href="/admin" aria-current={current === "results" ? "page" : undefined}>Results</a>
+        <a e:if={session.get("role") === "admin"} class="link-muted is-wide-only" href="/admin/lots/new" aria-current={current === "new-lot" ? "page" : undefined}>New lot</a>
+
+        <span e:if={session.isLoggedIn()} class="cluster is-sm">
+          <span class="site-user">{session.get("userName")}</span>
+          <button class="is-ghost is-sm" onclick={() => onSignout()}>Sign out</button>
+        </span>
+        <span e:else class="cluster is-sm">
+          <a class="button is-ghost is-sm" href="/signin">Sign in</a>
+          <a class="button is-primary is-sm" href="/signup">Sign up</a>
+        </span>
+      </nav>
+    </div>
+  </header>
+</SiteHeader>

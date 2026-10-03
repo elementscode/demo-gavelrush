@@ -1,0 +1,127 @@
+@import "#app/shared/styles/page.css";
+
+.checkout-page {
+  padding-block: var(--space-10) var(--space-16);
+}
+
+.checkout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  max-width: 60rem;
+  margin-inline: auto;
+  overflow: hidden;
+}
+
+.checkout-summary {
+  padding: var(--space-10);
+  background: var(--accent-soft);
+}
+
+.checkout-pay {
+  padding: var(--space-10);
+  align-content: center;
+}
+
+.checkout-back {
+  font-size: var(--text-sm);
+}
+
+.checkout-label {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.checkout-total {
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.checkout-line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.checkout-photo {
+  width: 4.5rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+}
+
+.checkout-line-title {
+  font-weight: 600;
+}
+
+.checkout-line-amount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkout-totals {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--accent-edge);
+}
+
+.checkout-totals .row {
+  justify-content: space-between;
+}
+
+.checkout-totals dt {
+  color: var(--ink-soft);
+}
+
+.checkout-totals dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkout-totals .is-total dt,
+.checkout-totals .is-total dd {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.checkout-badge {
+  justify-self: start;
+  width: fit-content;
+}
+
+.checkout-title {
+  font-size: var(--text-2xl);
+}
+
+.checkout-sub {
+  color: var(--ink-soft);
+}
+
+.checkout-note {
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 48rem) {
+  .checkout-page {
+    padding-block: var(--space-6) var(--space-12);
+  }
+
+  .checkout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .checkout-summary,
+  .checkout-pay {
+    padding: var(--space-6);
+  }
+
+  .checkout-total {
+    font-size: var(--text-3xl);
+  }
+}

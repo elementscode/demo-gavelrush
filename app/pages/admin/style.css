@@ -1,0 +1,82 @@
+@import "#app/shared/styles/page.css";
+
+.admin-page {
+  padding-block: var(--space-10) var(--space-16);
+}
+
+.admin-head {
+  justify-content: space-between;
+  align-items: end;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.admin-stat.is-hero {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.admin-stat.is-hero .admin-stat-label {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.admin-stat-value {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.admin-stat-label {
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+}
+
+.results-wrap {
+  overflow-x: auto;
+}
+
+.results {
+  width: 100%;
+}
+
+.results td,
+.results th {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.results .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.results .lot-cell {
+  gap: var(--space-3);
+  white-space: normal;
+  min-width: 16rem;
+}
+
+.results .lot-cell img {
+  width: 3rem;
+  height: 2.25rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.results .dim {
+  color: var(--ink-dim);
+}
+
+@media (max-width: 56rem) {
+  .admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

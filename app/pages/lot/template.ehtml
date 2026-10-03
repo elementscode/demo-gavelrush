@@ -1,0 +1,247 @@
+import "./style.css";
+import { LiveView, session } from "@elements/app";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { SiteHeader } from "#app/shared/templates/site-header";
+import { WatchToggle } from "#app/shared/templates/watch-toggle";
+import { placeBid } from "#app/shared/services/lots";
+import {
+  LotRow,
+  BidRow,
+  WatchRow,
+  Clock,
+  startClock,
+  photoUrl,
+  money,
+  minimumBid,
+  isClosed,
+  isClosingSoon,
+  remainingMs,
+  countdown,
+  closeTime,
+} from "#app/shared/lot";
+
+interface BidForm {
+  amount: string;
+  error: string;
+  placing: boolean;
+}
+
+function lotOf(lots: LiveView<LotRow>, lotId: string): LotRow {
+  return lots.get(lotId)!;
+}
+
+function onBid(lot: LotRow, form: BidForm) {
+  let amount = form.amount.trim() === "" ? minimumBid(lot) : Number(form.amount.replace(/[$,\s]/g, ""));
+
+  form.error = "";
+  form.placing = true;
+
+  try {
+    placeBid(lot.id, amount);
+    form.amount = "";
+  } catch (err: any) {
+    form.error = err.message;
+  } finally {
+    form.placing = false;
+  }
+}
+
+function bidLabel(lot: LotRow, form: BidForm): string {
+  let amount = Number(form.amount.replace(/[$,\s]/g, ""));
+
+  return `Bid ${money(form.amount.trim() !== "" && Number.isFinite(amount) ? amount : minimumBid(lot))}`;
+}
+
+function flashIfNew(el: Element, bid: BidRow, now: number) {
+  if (now - +bid.createdAt < 10_000) {
+    el.classList.add("bid-flash");
+  }
+}
+
+function bidderLine(lot: LotRow, now: number): string {
+  let mine = lot.topBidderId === session.get("userId");
+
+  if (isClosed(lot, now)) {
+    return mine ? "You won" : `Won by ${lot.topBidderName}`;
+  }
+
+  return mine ? "You're the high bidder" : `High bidder ${lot.topBidderName}`;
+}
+
+function ago(date: Date, now: number): string {
+  let s = Math.max(0, Math.floor((now - +date) / 1000));
+
+  if (s < 60) {
+    return "just now";
+  }
+
+  let m = Math.floor(s / 60);
+
+  if (m < 60) {
+    return `${m} min ago`;
+  }
+
+  let h = Math.floor(m / 60);
+
+  if (h < 24) {
+    return `${h} hr ago`;
+  }
+
+  return closeTime(date);
+}
+
+<html lang="en" class="page-lot" (
+  lotId: string,
+  lots: LiveView<LotRow>,
+  bids: LiveView<BidRow>,
+  watches: LiveView<WatchRow> | null,
+  serverNow: Date,
+  private clock: Clock = { now: +serverNow, skew: 0 },
+  private gallery: { index: number } = { index: 0 },
+  private form: BidForm = { amount: "", error: "", placing: false },
+) oninit={() => startClock(clock, serverNow)}>
+  <head>
+    <title>{`Lot ${lotOf(lots, lotId).number}: ${lotOf(lots, lotId).title} · gavelrush`}</title>
+    <meta name="description" content={lotOf(lots, lotId).description}>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <div class="app">
+      <SiteHeader current="lots" />
+
+      <main class="page-shell lot-page stack is-lg">
+        <a class="lot-back link-muted" href="/">← All lots</a>
+
+        <div class="lot-layout">
+          <div class="lot-media stack is-md">
+            <img class="lot-gallery-main"
+                 src={photoUrl(lotOf(lots, lotId).photos[gallery.index] ?? lotOf(lots, lotId).photos[0] ?? "")}
+                 alt={lotOf(lots, lotId).title}
+                 width="800" height="600">
+
+            <div e:if={lotOf(lots, lotId).photos.length > 1} class="lot-thumbs row">
+              <button e:for={p of lotOf(lots, lotId).photos.map((ref, i) => ({ id: ref, ref, i }))}
+                      type="button"
+                      class={["lot-thumb", "is-ghost", gallery.index === p.i && "is-active"]}
+                      aria-label={`Photo ${p.i + 1}`}
+                      onclick={() => gallery.index = p.i}>
+                <img src={photoUrl(p.ref)} alt="" width="88" height="64">
+              </button>
+            </div>
+          </div>
+
+          <div class="lot-details stack is-xl">
+            <section class="stack is-sm">
+              <h2>About this lot</h2>
+              <p class="lot-description">{lotOf(lots, lotId).description}</p>
+            </section>
+
+            <section class="stack is-sm">
+              <h2>Bid history</h2>
+              <ul e:if={bids.length > 0} class="bid-history stack">
+                <li e:for={bid of bids.sort((a, b) => b.amount - a.amount)} class="row" oninsert={(e) => flashIfNew(e.target, bid, clock.now)}>
+                  <span class="stack is-xs">
+                    <span>{bid.userId === session.get("userId") ? "You" : bid.bidderName}</span>
+                    <span class="bid-when">{ago(bid.createdAt, clock.now)}</span>
+                  </span>
+                  <span class="bid-amount">{money(bid.amount)}</span>
+                </li>
+              </ul>
+              <p e:else class="lot-label">No bids yet. Opening bid is {money(lotOf(lots, lotId).startingBid)}.</p>
+            </section>
+          </div>
+
+          <aside class="lot-panel card">
+            <div class="card-body stack is-lg">
+              <div class="stack is-sm">
+                <div class="cluster is-sm">
+                  <span class="pill">Lot {lotOf(lots, lotId).number}</span>
+                  <span e:if={isClosed(lotOf(lots, lotId), clock.now)} class="pill">Closed</span>
+                  <span e:elseif={isClosingSoon(lotOf(lots, lotId), clock.now)} class="pill is-danger"><span class="pill-dot"></span>Closing soon</span>
+                </div>
+                <h1 class="lot-title">{lotOf(lots, lotId).title}</h1>
+              </div>
+
+              <div class="stack is-xs">
+                <span class="lot-label">
+                  {isClosed(lotOf(lots, lotId), clock.now) ? (lotOf(lots, lotId).currentBid === null ? "Closed with no bids" : "Winning bid") : (lotOf(lots, lotId).currentBid === null ? "Starting bid" : "Current bid")}
+                </span>
+                <span class="lot-price">{money(lotOf(lots, lotId).currentBid ?? lotOf(lots, lotId).startingBid)}</span>
+                <span e:if={lotOf(lots, lotId).topBidderName} class="lot-label">
+                  {bidderLine(lotOf(lots, lotId), clock.now)} · {lotOf(lots, lotId).bidCount} {lotOf(lots, lotId).bidCount === 1 ? "bid" : "bids"}
+                </span>
+              </div>
+
+              <div class="lot-facts">
+                <div class="stack is-xs">
+                  <span class="lot-label">{isClosed(lotOf(lots, lotId), clock.now) ? "Closed" : "Closes in"}</span>
+                  <span class={["lot-countdown", isClosingSoon(lotOf(lots, lotId), clock.now) && "is-soon", isClosed(lotOf(lots, lotId), clock.now) && "is-done"]}>
+                    {isClosed(lotOf(lots, lotId), clock.now) ? closeTime(lotOf(lots, lotId).closesAt) : countdown(remainingMs(lotOf(lots, lotId), clock.now))}
+                  </span>
+                </div>
+                <div class="stack is-xs">
+                  <span class="lot-label">Bid increment</span>
+                  <span class="lot-countdown">{money(lotOf(lots, lotId).increment)}</span>
+                </div>
+              </div>
+
+              <WinnerPanel e:if={isClosed(lotOf(lots, lotId), clock.now)} lot={lotOf(lots, lotId)} />
+
+              <div e:elseif={session.isLoggedIn()} class="stack is-sm">
+                <div e:if={lotOf(lots, lotId).topBidderId === session.get("userId")} class="callout is-success">
+                  <p class="callout-title">You're winning this lot.</p>
+                  <p>We'll email you if someone outbids you.</p>
+                </div>
+                <form e:else class="stack is-sm" onsubmit={() => onBid(lotOf(lots, lotId), form)}>
+                  <label for="amount" class="lot-label">Your bid, at least {money(minimumBid(lotOf(lots, lotId)))}</label>
+                  <div class="bid-form-row row">
+                    <div class="bid-input">
+                      <span>$</span>
+                      <input id="amount"
+                             name="amount"
+                             inputmode="numeric"
+                             autocomplete="off"
+                             value={form.amount}
+                             placeholder={String(minimumBid(lotOf(lots, lotId)))}
+                             class={form.error && "is-error"}>
+                    </div>
+                    <button type="submit" class="is-primary" disabled={form.placing}>
+                      {bidLabel(lotOf(lots, lotId), form)}
+                    </button>
+                  </div>
+                  <p e:if={form.error} class="callout is-danger" role="alert">{form.error}</p>
+                  <p e:elseif={remainingMs(lotOf(lots, lotId), clock.now) <= 120_000} class="lot-label">A bid now adds two minutes to the close.</p>
+                </form>
+                <WatchToggle {watches} {lotId} size="is-block" />
+              </div>
+
+              <div e:else class="stack is-sm">
+                <a class="button is-primary is-block" href={`/signin?next=/lots/${lotId}`}>Sign in to bid</a>
+                <p class="lot-label">New here? <a href="/signup">Create an account</a> in under a minute.</p>
+              </div>
+
+              <p e:if={!isClosed(lotOf(lots, lotId), clock.now)} class="lot-label">Closes {closeTime(lotOf(lots, lotId).closesAt)}</p>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
+
+<WinnerPanel (lot: LotRow)>
+  <div class="stack is-sm">
+    <div e:if={lot.winnerId && lot.winnerId === session.get("userId") && lot.paymentStatus === "paid"} class="callout is-success">
+      <p class="callout-title">You won, and you've paid. Thank you!</p>
+      <p>The organizers will be in touch about collecting your lot.</p>
+    </div>
+    <div e:elseif={lot.winnerId && lot.winnerId === session.get("userId")} class="callout is-accent stack is-sm">
+      <p class="callout-title">You won this lot.</p>
+      <p>Pay your winning bid by card to claim it.</p>
+      <a class="button is-primary is-block" href={`/pay/${lot.id}`}>Pay {money(lot.currentBid)} by card</a>
+    </div>
+    <p e:elseif={lot.status === "open"} class="lot-label">Bidding has ended. The winner is being confirmed.</p>
+    <p e:elseif={lot.winnerName} class="lot-label">Won by {lot.topBidderName}</p>
+    <p e:else class="lot-label">This lot closed without a bid.</p>
+  </div>
+</WinnerPanel>

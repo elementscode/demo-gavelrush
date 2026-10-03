@@ -1,0 +1,161 @@
+@import "#app/shared/styles/page.css";
+
+.lots-hero {
+  padding-block: var(--space-12) var(--space-8);
+}
+
+.lots-hero h1 {
+  max-width: 18ch;
+}
+
+.lots-stats {
+  gap: var(--space-8);
+}
+
+.lots-stat {
+  gap: var(--space-1);
+}
+
+.lots-stat-value {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.lots-stat-label {
+  color: var(--ink-dim);
+  font-size: var(--text-sm);
+}
+
+.lots-toolbar {
+  justify-content: space-between;
+  padding-bottom: var(--space-5);
+}
+
+.lots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: var(--space-6);
+  padding-bottom: var(--space-16);
+}
+
+.lot-card {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  transition: box-shadow var(--duration-fast, 150ms) ease, transform var(--duration-fast, 150ms) ease;
+}
+
+.lot-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.lot-card-photo {
+  display: block;
+  width: 100%;
+  height: 12rem;
+  object-fit: cover;
+  background: var(--bg-muted);
+}
+
+.lot-card-body {
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.lot-card-title {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: var(--leading-snug);
+}
+
+.lot-card-title a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.lot-card-title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.lot-card-meta {
+  justify-content: space-between;
+  align-items: end;
+}
+
+.lot-card-bid {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.lot-card-label {
+  color: var(--ink-dim);
+  font-size: var(--text-xs);
+}
+
+.lot-card-tags {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  right: var(--space-3);
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.lot-card-tags .pill {
+  background: color-mix(in oklab, var(--bg) 90%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.lot-card-tags .pill.is-danger,
+.lot-card-tags .pill.is-success {
+  background: revert-layer;
+}
+
+.lot-card .watch-toggle {
+  position: relative;
+  z-index: 1;
+}
+
+.countdown {
+  font-variant-numeric: tabular-nums;
+}
+
+.lots-empty {
+  padding: var(--space-12) 0;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.lots-toolbar .tab-list {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 40rem) {
+  .lots-hero {
+    padding-block: var(--space-8) var(--space-6);
+  }
+
+  .lots-hero .display {
+    font-size: var(--text-4xl);
+  }
+
+  .lots-stats {
+    gap: var(--space-6);
+  }
+
+  .lots-toolbar .tab {
+    padding-inline: var(--space-3);
+  }
+}
+
+.lots-toolbar .tabs {
+  min-width: 0;
+  max-width: 100%;
+}
