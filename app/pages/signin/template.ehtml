@@ -1,0 +1,101 @@
+import "./style.css";
+import { redirect } from "@elements/app";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { SiteHeader } from "#app/shared/templates/site-header";
+import { AuthShell } from "#app/shared/templates/auth-shell";
+import { signin } from "#app/shared/services/auth";
+
+export interface DemoLogin {
+  email: string;
+  name: string;
+  role: string;
+  password: string;
+}
+
+interface SigninForm {
+  email: string;
+  password: string;
+  error: string;
+}
+
+function onSubmit(form: SigninForm, next: string) {
+  try {
+    signin(form.email, form.password);
+    form.error = "";
+    redirect(next);
+  } catch (err: any) {
+    form.error = err.message;
+  }
+}
+
+function onPick(form: SigninForm, login: DemoLogin) {
+  form.email = login.email;
+  form.password = login.password;
+  form.error = "";
+}
+
+<html lang="en" class="page-signin" (
+  next: string,
+  demoLogins: DemoLogin[],
+  private form: SigninForm = { email: "", password: "", error: "" },
+)>
+  <head>
+    <title>Sign in · gavelrush</title>
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <div class="app">
+      <SiteHeader />
+      <AuthShell>
+        <div class="auth-form stack is-xl">
+          <form class="stack is-lg" onsubmit={() => onSubmit(form, next)}>
+            <div class="stack is-xs">
+              <h1>Sign in</h1>
+              <p class="auth-sub">Welcome back. The auction is live.</p>
+            </div>
+
+            <p e:if={form.error} class="callout is-danger" role="alert">{form.error}</p>
+
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" value={form.email}
+                     autocomplete="email" autocapitalize="none" spellcheck={false}
+                     placeholder="you@example.com" required>
+            </div>
+
+            <div class="field">
+              <label for="password">Password</label>
+              <input id="password" name="password" type="password" value={form.password}
+                     autocomplete="current-password" required>
+            </div>
+
+            <button type="submit" class="is-primary is-block">Sign in</button>
+
+            <p>New to gavelrush? <a href={next === "/" ? "/signup" : `/signup?next=${encodeURIComponent(next)}`}>Create an account</a></p>
+          </form>
+
+          <section e:if={demoLogins.length > 0} class="card">
+            <div class="card-head">
+              <h2 class="text-sm">Demo accounts</h2>
+            </div>
+            <div class="card-body stack is-sm">
+              <p class="text-sm">Pick one to fill the form. Bidders use <code>bidder-pass</code>, the admin uses <code>admin-pass</code>.</p>
+              <div class="demo-logins stack">
+                <button e:for={login of demoLogins.map((l) => ({ ...l, id: l.email }))}
+                        type="button"
+                        class="demo-login is-ghost row"
+                        onclick={() => onPick(form, login)}>
+                  <span class="row is-sm demo-login-name">
+                    <span>{login.name}</span>
+                    <span e:if={login.role === "admin"} class="pill is-accent">Admin</span>
+                  </span>
+                  <span class="demo-login-email">{login.email}</span>
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </AuthShell>
+    </div>
+  </body>
+</html>

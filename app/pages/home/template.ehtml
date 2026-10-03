@@ -1,0 +1,137 @@
+import "./style.css";
+import { LiveView } from "@elements/app";
+import favicon from "#app/shared/assets/favicons/favicon.svg";
+import { SiteHeader } from "#app/shared/templates/site-header";
+import { WatchToggle } from "#app/shared/templates/watch-toggle";
+import {
+  LotRow,
+  WatchRow,
+  Clock,
+  startClock,
+  coverPhoto,
+  money,
+  isClosed,
+  isClosingSoon,
+  remainingMs,
+  countdown,
+} from "#app/shared/lot";
+
+type Filter = "all" | "soon" | "watching" | "closed";
+
+function visibleLots(lots: LiveView<LotRow>, watches: LiveView<WatchRow> | null, filter: Filter, now: number): LotRow[] {
+  let rows = lots.sort((a, b) => +a.closesAt - +b.closesAt);
+
+  switch (filter) {
+    case "soon":
+      return rows.filter((l) => !isClosed(l, now) && remainingMs(l, now) <= 24 * 3600_000);
+
+    case "watching":
+      return rows.filter((l) => watches?.some((w) => w.lotId === l.id));
+
+    case "closed":
+      return rows.filter((l) => isClosed(l, now)).reverse();
+
+    default:
+      return rows.filter((l) => !isClosed(l, now)).concat(rows.filter((l) => isClosed(l, now)));
+  }
+}
+
+function totalBid(lots: LiveView<LotRow>): number {
+  return lots.reduce((sum, l) => sum + (l.currentBid ?? 0), 0);
+}
+
+function totalBids(lots: LiveView<LotRow>): number {
+  return lots.reduce((sum, l) => sum + l.bidCount, 0);
+}
+
+<html lang="en" class="page-home" (
+  lots: LiveView<LotRow>,
+  watches: LiveView<WatchRow> | null,
+  serverNow: Date,
+  private clock: Clock = { now: +serverNow, skew: 0 },
+  private view: { filter: Filter } = { filter: "all" as Filter },
+) oninit={() => startClock(clock, serverNow)}>
+  <head>
+    <title>gavelrush · Charity auction week</title>
+    <meta name="description" content="Bid on lots in the charity's online auction week.">
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+  </head>
+  <body>
+    <div class="app">
+      <SiteHeader current="lots" />
+
+      <main class="page-shell">
+        <section class="lots-hero stack is-lg">
+          <div class="stack is-sm">
+            <p class="eyebrow">Charity auction week</p>
+            <h1 class="display">Bid on something good.</h1>
+            <p class="lede">Every lot was donated, and every dollar goes to the cause. Bids land live, and a bid in the final two minutes adds two more.</p>
+          </div>
+
+          <div class="lots-stats cluster">
+            <div class="lots-stat stack">
+              <span class="lots-stat-value">{money(totalBid(lots))}</span>
+              <span class="lots-stat-label">bid so far</span>
+            </div>
+            <div class="lots-stat stack">
+              <span class="lots-stat-value">{totalBids(lots)}</span>
+              <span class="lots-stat-label">bids placed</span>
+            </div>
+            <div class="lots-stat stack">
+              <span class="lots-stat-value">{lots.filter((l) => !isClosed(l, clock.now)).length}</span>
+              <span class="lots-stat-label">lots open</span>
+            </div>
+          </div>
+        </section>
+
+        <div class="lots-toolbar cluster">
+          <div class="tabs">
+            <div class="tab-list" role="tablist">
+              <button type="button" role="tab" class={["tab", view.filter === "all" && "is-active"]} aria-selected={view.filter === "all"} onclick={() => view.filter = "all"}>All lots</button>
+              <button type="button" role="tab" class={["tab", view.filter === "soon" && "is-active"]} aria-selected={view.filter === "soon"} onclick={() => view.filter = "soon"}>Closing today</button>
+              <button e:if={watches} type="button" role="tab" class={["tab", view.filter === "watching" && "is-active"]} aria-selected={view.filter === "watching"} onclick={() => view.filter = "watching"}>Watching</button>
+              <button type="button" role="tab" class={["tab", view.filter === "closed" && "is-active"]} aria-selected={view.filter === "closed"} onclick={() => view.filter = "closed"}>Closed</button>
+            </div>
+          </div>
+        </div>
+
+        <div e:if={visibleLots(lots, watches, view.filter, clock.now).length > 0} class="lots-grid">
+          <LotCard e:for={lot of visibleLots(lots, watches, view.filter, clock.now)} {lot} {watches} {clock} />
+        </div>
+        <p e:else class="lots-empty">
+          {view.filter === "watching" ? "You aren't watching any lots yet. Tap Watch on a lot to follow it." : "No lots here right now."}
+        </p>
+      </main>
+    </div>
+  </body>
+</html>
+
+<LotCard (lot: LotRow, watches: LiveView<WatchRow> | null, clock: Clock)>
+  <article class="lot-card card">
+    <img class="lot-card-photo" src={coverPhoto(lot)} alt="" width="480" height="320" loading="lazy">
+
+    <div class="lot-card-tags row">
+      <span class="pill">Lot {lot.number}</span>
+      <span e:if={isClosed(lot, clock.now)} class="pill">Closed</span>
+      <span e:elseif={isClosingSoon(lot, clock.now)} class="pill is-danger countdown">
+        <span class="pill-dot"></span>
+        {countdown(remainingMs(lot, clock.now))}
+      </span>
+      <span e:else class="pill countdown">{countdown(remainingMs(lot, clock.now))}</span>
+    </div>
+
+    <div class="lot-card-body stack is-md">
+      <h2 class="lot-card-title"><a href={`/lots/${lot.id}`}>{lot.title}</a></h2>
+
+      <div class="lot-card-meta row">
+        <div class="stack is-xs">
+          <span class="lot-card-label">
+            {isClosed(lot, clock.now) ? (lot.currentBid === null ? "No bids" : "Winning bid") : (lot.currentBid === null ? "Starting bid" : `Current bid · ${lot.bidCount} ${lot.bidCount === 1 ? "bid" : "bids"}`)}
+          </span>
+          <span class="lot-card-bid">{money(lot.currentBid ?? lot.startingBid)}</span>
+        </div>
+        <WatchToggle {watches} lotId={lot.id} />
+      </div>
+    </div>
+  </article>
+</LotCard>

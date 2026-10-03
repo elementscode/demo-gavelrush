@@ -1,0 +1,18 @@
+@import "#app/shared/styles/email.css";
+
+.email.won .brand {
+  margin: 0 0 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #9f2a1c;
+}
+
+.email.won .cta {
+  display: inline-block;
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: #9f2a1c;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+}
