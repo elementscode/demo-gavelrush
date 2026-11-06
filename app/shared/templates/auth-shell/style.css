@@ -20,17 +20,17 @@
 .auth-art-copy {
   position: absolute;
   inset: auto var(--space-10) var(--space-10);
-  color: #fff;
+  color: var(--brand-50);
 }
 
 .auth-art-copy h2 {
-  color: #fff;
+  color: inherit;
   font-size: var(--text-3xl);
   max-width: 16ch;
 }
 
 .auth-art-copy p {
-  color: rgb(255 255 255 / 0.85);
+  color: color-mix(in oklab, var(--brand-50) 85%, transparent);
 }
 
 .auth-panel {
