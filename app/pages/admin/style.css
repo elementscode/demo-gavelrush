@@ -39,14 +39,8 @@
   font-size: var(--text-sm);
 }
 
-.results td,
-.results th {
-  white-space: nowrap;
-}
-
 .results .lot-cell {
   gap: var(--space-3);
-  white-space: normal;
   min-width: 16rem;
 }
 

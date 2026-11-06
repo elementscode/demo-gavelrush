@@ -110,7 +110,7 @@ function totals(lots: LiveView<LotRow>): Totals {
               </thead>
               <tbody>
                 <tr e:for={lot of lots.sort((a, b) => a.number - b.number)}>
-                  <TableCell>
+                  <TableCell wrap>
                     <a class="lot-cell row" href={`/lots/${lot.id}`}>
                       <img src={coverPhoto(lot)} alt="" width="48" height="36">
                       <span>{lot.number}. {lot.title}</span>
