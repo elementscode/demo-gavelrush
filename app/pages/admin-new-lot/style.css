@@ -4,6 +4,12 @@
   padding-block: var(--space-10) var(--space-16);
 }
 
+.new-lot-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
 .photo-previews {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
@@ -15,16 +21,4 @@
   height: 5rem;
   object-fit: cover;
   border-radius: var(--radius-md);
-}
-
-/* A datetime or file input's intrinsic width would otherwise push the card
-   past a phone's edge. */
-.new-lot-page .card-body,
-.new-lot-page .field,
-.new-lot-page input {
-  min-width: 0;
-}
-
-.new-lot-page input[type="file"] {
-  max-width: 100%;
 }
