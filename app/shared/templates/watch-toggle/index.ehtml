@@ -1,6 +1,9 @@
 import "./style.css";
 import { LiveView, session } from "@elements/app";
 import { WatchRow } from "#app/shared/lot";
+import { Toggle } from "@elements/ui/toggle";
+import { Button } from "@elements/ui/button";
+import { Icon } from "@elements/ui/icon";
 
 function isWatching(watches: LiveView<WatchRow> | null, lotId: string): boolean {
   return watches?.some((w) => w.lotId === lotId) ?? false;
@@ -21,21 +24,18 @@ function onToggle(watches: LiveView<WatchRow> | null, lotId: string) {
 }
 
 /** A star that adds a lot to the bidder's watchlist, or a sign-in link. */
-<WatchToggle (watches: LiveView<WatchRow> | null, lotId: string, size: string = "is-sm")>
-  <button e:if={watches}
-          type="button"
-          class={["watch-toggle", "is-ghost", size, isWatching(watches, lotId) && "is-watching"]}
-          aria-pressed={isWatching(watches, lotId)}
-          onclick={() => onToggle(watches, lotId)}>
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
-      <path d="M12 3.5l2.6 5.3 5.9.9-4.25 4.1 1 5.8L12 16.9l-5.25 2.7 1-5.8L3.5 9.7l5.9-.9z"/>
-    </svg>
+<WatchToggle (watches: LiveView<WatchRow> | null, lotId: string, block: boolean = false)>
+  <Toggle e:if={watches}
+          variant="outline"
+          size={block ? "md" : "sm"}
+          class={["watch-toggle", block && "is-block"].filter(Boolean).join(" ")}
+          pressed={isWatching(watches, lotId)}
+          onPressedChange={(_, details) => { details.cancel(); onToggle(watches, lotId); }}>
+    <Icon name="star" />
     {isWatching(watches, lotId) ? "Watching" : "Watch"}
-  </button>
-  <a e:else class={["button", "watch-toggle", "is-ghost", size]} href="/signin">
-    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
-      <path d="M12 3.5l2.6 5.3 5.9.9-4.25 4.1 1 5.8L12 16.9l-5.25 2.7 1-5.8L3.5 9.7l5.9-.9z"/>
-    </svg>
+  </Toggle>
+  <Button e:else variant="outline" size={block ? "md" : "sm"} {block} class="watch-toggle" href="/signin">
+    <Icon name="star" />
     Watch
-  </a>
+  </Button>
 </WatchToggle>

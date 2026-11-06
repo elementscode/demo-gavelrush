@@ -1,9 +1,8 @@
-.watch-toggle svg {
-  width: 1rem;
-  height: 1rem;
+.watch-toggle.is-block {
+  width: 100%;
 }
 
-.watch-toggle.is-watching svg {
+.watch-toggle[data-state="on"] svg {
   fill: currentColor;
   color: var(--accent);
 }

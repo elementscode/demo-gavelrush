@@ -1,6 +1,7 @@
 import "./style.css";
 import { session, redirect } from "@elements/app";
 import { signout } from "#app/shared/services/auth";
+import { Button } from "@elements/ui/button";
 
 function onSignout() {
   signout();
@@ -28,11 +29,11 @@ function onSignout() {
 
         <span e:if={session.isLoggedIn()} class="cluster is-sm">
           <span class="site-user">{session.get("userName")}</span>
-          <button class="is-ghost is-sm" onclick={() => onSignout()}>Sign out</button>
+          <Button variant="ghost" size="sm" onclick={() => onSignout()}>Sign out</Button>
         </span>
         <span e:else class="cluster is-sm">
-          <a class="button is-ghost is-sm" href="/signin">Sign in</a>
-          <a class="button is-primary is-sm" href="/signup">Sign up</a>
+          <Button variant="ghost" size="sm" href="/signin">Sign in</Button>
+          <Button variant="primary" size="sm" href="/signup">Sign up</Button>
         </span>
       </nav>
     </div>

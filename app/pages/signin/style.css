@@ -5,9 +5,14 @@
 }
 
 .demo-login {
+  flex-wrap: wrap;
   justify-content: space-between;
-  width: 100%;
+  row-gap: 0;
+  height: auto;
+  padding-block: var(--space-2);
   text-align: left;
+  text-transform: none;
+  white-space: normal;
 }
 
 .demo-login-email {
@@ -19,9 +24,4 @@
 .demo-login-name {
   gap: var(--space-2);
   white-space: nowrap;
-}
-
-.demo-login {
-  flex-wrap: wrap;
-  row-gap: 0;
 }
