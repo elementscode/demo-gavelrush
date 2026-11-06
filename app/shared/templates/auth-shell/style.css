@@ -44,6 +44,10 @@
   margin-inline: auto;
 }
 
+.auth-sub {
+  color: var(--ink-soft);
+}
+
 @media (max-width: 56rem) {
   .auth-page {
     grid-template-columns: minmax(0, 1fr);
@@ -52,8 +56,4 @@
   .auth-art {
     display: none;
   }
-}
-
-.auth-sub {
-  color: var(--ink-soft);
 }

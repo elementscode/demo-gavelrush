@@ -28,7 +28,7 @@ function onToggle(watches: LiveView<WatchRow> | null, lotId: string) {
   <Toggle e:if={watches}
           variant="outline"
           size={block ? "md" : "sm"}
-          class={["watch-toggle", block && "is-block"].filter(Boolean).join(" ")}
+          class={block ? "watch-toggle is-block" : "watch-toggle"}
           pressed={isWatching(watches, lotId)}
           onPressedChange={(_, details) => { details.cancel(); onToggle(watches, lotId); }}>
     <Icon name="star" />

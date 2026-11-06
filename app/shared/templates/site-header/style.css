@@ -46,9 +46,7 @@
   .site-user {
     display: none;
   }
-}
 
-@media (max-width: 40rem) {
   .site-nav {
     gap: var(--space-3);
     flex-wrap: nowrap;

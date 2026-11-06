@@ -90,8 +90,7 @@
 }
 
 .checkout-badge {
-  justify-self: start;
-  width: fit-content;
+  align-self: start;
 }
 
 .checkout-title {

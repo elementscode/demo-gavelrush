@@ -107,8 +107,7 @@
   backdrop-filter: blur(6px);
 }
 
-.lot-card-tags .pill.is-danger,
-.lot-card-tags .pill.is-success {
+.lot-card-tags .pill.is-danger {
   background: revert-layer;
 }
 

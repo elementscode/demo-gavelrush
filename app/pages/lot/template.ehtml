@@ -160,73 +160,73 @@ function ago(date: Date, now: number): string {
 
           <aside class="lot-panel">
             <Card>
-            <CardContent class="stack is-lg">
-              <div class="stack is-sm">
-                <div class="cluster is-sm">
-                  <Badge variant="secondary">Lot {lotOf(lots, lotId).number}</Badge>
-                  <Badge e:if={isClosed(lotOf(lots, lotId), clock.now)} variant="secondary">Closed</Badge>
-                  <Badge e:elseif={isClosingSoon(lotOf(lots, lotId), clock.now)} variant="danger" dot>Closing soon</Badge>
+              <CardContent class="stack is-lg">
+                <div class="stack is-sm">
+                  <div class="cluster is-sm">
+                    <Badge variant="secondary">Lot {lotOf(lots, lotId).number}</Badge>
+                    <Badge e:if={isClosed(lotOf(lots, lotId), clock.now)} variant="secondary">Closed</Badge>
+                    <Badge e:elseif={isClosingSoon(lotOf(lots, lotId), clock.now)} variant="danger" dot>Closing soon</Badge>
+                  </div>
+                  <h1 class="lot-title">{lotOf(lots, lotId).title}</h1>
                 </div>
-                <h1 class="lot-title">{lotOf(lots, lotId).title}</h1>
-              </div>
 
-              <div class="stack is-xs">
-                <span class="lot-label">
-                  {isClosed(lotOf(lots, lotId), clock.now) ? (lotOf(lots, lotId).currentBid === null ? "Closed with no bids" : "Winning bid") : (lotOf(lots, lotId).currentBid === null ? "Starting bid" : "Current bid")}
-                </span>
-                <span class="lot-price">{money(lotOf(lots, lotId).currentBid ?? lotOf(lots, lotId).startingBid)}</span>
-                <span e:if={lotOf(lots, lotId).topBidderName} class="lot-label">
-                  {bidderLine(lotOf(lots, lotId), clock.now)} · {lotOf(lots, lotId).bidCount} {lotOf(lots, lotId).bidCount === 1 ? "bid" : "bids"}
-                </span>
-              </div>
-
-              <div class="lot-facts">
                 <div class="stack is-xs">
-                  <span class="lot-label">{isClosed(lotOf(lots, lotId), clock.now) ? "Closed" : "Closes in"}</span>
-                  <span class={["lot-countdown", isClosingSoon(lotOf(lots, lotId), clock.now) && "is-soon", isClosed(lotOf(lots, lotId), clock.now) && "is-done"]}>
-                    {isClosed(lotOf(lots, lotId), clock.now) ? closeTime(lotOf(lots, lotId).closesAt) : countdown(remainingMs(lotOf(lots, lotId), clock.now))}
+                  <span class="lot-label">
+                    {isClosed(lotOf(lots, lotId), clock.now) ? (lotOf(lots, lotId).currentBid === null ? "Closed with no bids" : "Winning bid") : (lotOf(lots, lotId).currentBid === null ? "Starting bid" : "Current bid")}
+                  </span>
+                  <span class="lot-price">{money(lotOf(lots, lotId).currentBid ?? lotOf(lots, lotId).startingBid)}</span>
+                  <span e:if={lotOf(lots, lotId).topBidderName} class="lot-label">
+                    {bidderLine(lotOf(lots, lotId), clock.now)} · {lotOf(lots, lotId).bidCount} {lotOf(lots, lotId).bidCount === 1 ? "bid" : "bids"}
                   </span>
                 </div>
-                <div class="stack is-xs">
-                  <span class="lot-label">Bid increment</span>
-                  <span class="lot-countdown">{money(lotOf(lots, lotId).increment)}</span>
-                </div>
-              </div>
 
-              <WinnerPanel e:if={isClosed(lotOf(lots, lotId), clock.now)} lot={lotOf(lots, lotId)} />
-
-              <div e:elseif={session.isLoggedIn()} class="stack is-sm">
-                <Alert e:if={lotOf(lots, lotId).topBidderId === session.get("userId")} variant="success" role="status"
-                       title="You're winning this lot." description="We'll email you if someone outbids you." />
-                <form e:else class="stack is-sm" onsubmit={() => onBid(lotOf(lots, lotId), form)}>
-                  <div class="bid-form-row row">
-                    <Field label={`Your bid, at least ${money(minimumBid(lotOf(lots, lotId)))}`} reserveError={false} class="bid-field">
-                      <InputGroup>
-                        <Input name="amount"
-                               value={form.amount}
-                               placeholder={String(minimumBid(lotOf(lots, lotId)))}
-                               invalid={!!form.error}
-                               attrs={{ id: "amount", inputmode: "numeric", autocomplete: "off" }} />
-                        <InputGroupAddon><InputGroupText>$</InputGroupText></InputGroupAddon>
-                      </InputGroup>
-                    </Field>
-                    <Button type="submit" variant="primary" loading={form.placing}>
-                      {bidLabel(lotOf(lots, lotId), form)}
-                    </Button>
+                <div class="lot-facts">
+                  <div class="stack is-xs">
+                    <span class="lot-label">{isClosed(lotOf(lots, lotId), clock.now) ? "Closed" : "Closes in"}</span>
+                    <span class={["lot-countdown", isClosingSoon(lotOf(lots, lotId), clock.now) && "is-soon", isClosed(lotOf(lots, lotId), clock.now) && "is-done"]}>
+                      {isClosed(lotOf(lots, lotId), clock.now) ? closeTime(lotOf(lots, lotId).closesAt) : countdown(remainingMs(lotOf(lots, lotId), clock.now))}
+                    </span>
                   </div>
-                  <Alert e:if={form.error} variant="danger" description={form.error} />
-                  <p e:elseif={remainingMs(lotOf(lots, lotId), clock.now) <= 120_000} class="lot-label">A bid now adds two minutes to the close.</p>
-                </form>
-                <WatchToggle {watches} {lotId} block />
-              </div>
+                  <div class="stack is-xs">
+                    <span class="lot-label">Bid increment</span>
+                    <span class="lot-countdown">{money(lotOf(lots, lotId).increment)}</span>
+                  </div>
+                </div>
 
-              <div e:else class="stack is-sm">
-                <Button variant="primary" block href={`/signin?next=/lots/${lotId}`}>Sign in to bid</Button>
-                <p class="lot-label">New here? <a href="/signup">Create an account</a> in under a minute.</p>
-              </div>
+                <WinnerPanel e:if={isClosed(lotOf(lots, lotId), clock.now)} lot={lotOf(lots, lotId)} />
 
-              <p e:if={!isClosed(lotOf(lots, lotId), clock.now)} class="lot-label">Closes {closeTime(lotOf(lots, lotId).closesAt)}</p>
-            </CardContent>
+                <div e:elseif={session.isLoggedIn()} class="stack is-sm">
+                  <Alert e:if={lotOf(lots, lotId).topBidderId === session.get("userId")} variant="success" role="status"
+                         title="You're winning this lot." description="We'll email you if someone outbids you." />
+                  <form e:else class="stack is-sm" onsubmit={() => onBid(lotOf(lots, lotId), form)}>
+                    <div class="bid-form-row row">
+                      <Field label={`Your bid, at least ${money(minimumBid(lotOf(lots, lotId)))}`} reserveError={false} class="bid-field">
+                        <InputGroup>
+                          <Input name="amount"
+                                 value={form.amount}
+                                 placeholder={String(minimumBid(lotOf(lots, lotId)))}
+                                 invalid={!!form.error}
+                                 attrs={{ id: "amount", inputmode: "numeric", autocomplete: "off" }} />
+                          <InputGroupAddon><InputGroupText>$</InputGroupText></InputGroupAddon>
+                        </InputGroup>
+                      </Field>
+                      <Button type="submit" variant="primary" loading={form.placing}>
+                        {bidLabel(lotOf(lots, lotId), form)}
+                      </Button>
+                    </div>
+                    <Alert e:if={form.error} variant="danger" description={form.error} />
+                    <p e:elseif={remainingMs(lotOf(lots, lotId), clock.now) <= 120_000} class="lot-label">A bid now adds two minutes to the close.</p>
+                  </form>
+                  <WatchToggle {watches} {lotId} block />
+                </div>
+
+                <div e:else class="stack is-sm">
+                  <Button variant="primary" block href={`/signin?next=/lots/${lotId}`}>Sign in to bid</Button>
+                  <p class="lot-label">New here? <a href="/signup">Create an account</a> in under a minute.</p>
+                </div>
+
+                <p e:if={!isClosed(lotOf(lots, lotId), clock.now)} class="lot-label">Closes {closeTime(lotOf(lots, lotId).closesAt)}</p>
+              </CardContent>
             </Card>
           </aside>
         </div>
