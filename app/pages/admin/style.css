@@ -39,23 +39,9 @@
   font-size: var(--text-sm);
 }
 
-.results-wrap {
-  overflow-x: auto;
-}
-
-.results {
-  width: 100%;
-}
-
 .results td,
 .results th {
   white-space: nowrap;
-  vertical-align: middle;
-}
-
-.results .num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
 }
 
 .results .lot-cell {
@@ -78,5 +64,9 @@
 @media (max-width: 56rem) {
   .admin-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-stat {
+    --card-spacing: var(--surface-padding-sm);
   }
 }

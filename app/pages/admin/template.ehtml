@@ -2,6 +2,10 @@ import "./style.css";
 import { LiveView } from "@elements/app";
 import favicon from "#app/shared/assets/favicons/favicon.svg";
 import { SiteHeader } from "#app/shared/templates/site-header";
+import { Badge } from "@elements/ui/badge";
+import { Button } from "@elements/ui/button";
+import { Card, CardContent } from "@elements/ui/card";
+import { Table, TableHead, TableCell } from "@elements/ui/table";
 import { LotRow, Clock, startClock, coverPhoto, money, isClosed, isClosingSoon, remainingMs, countdown } from "#app/shared/lot";
 
 interface Totals {
@@ -56,82 +60,84 @@ function totals(lots: LiveView<LotRow>): Totals {
             <h1>Results</h1>
           </div>
           <div class="cluster is-sm">
-            <a class="button is-primary" href="/admin/lots/new">New lot</a>
+            <Button variant="primary" href="/admin/lots/new">New lot</Button>
           </div>
         </div>
 
         <div class="admin-stats">
-          <div class="admin-stat is-hero card">
-            <div class="card-body stack is-xs">
+          <Card class="admin-stat is-hero">
+            <CardContent class="stack is-xs">
               <span class="admin-stat-label">Total raised</span>
               <span class="admin-stat-value">{money(totals(lots).raised)}</span>
               <span class="admin-stat-label">{totals(lots).sold} of {lots.length} lots sold</span>
-            </div>
-          </div>
-          <div class="admin-stat card">
-            <div class="card-body stack is-xs">
+            </CardContent>
+          </Card>
+          <Card class="admin-stat">
+            <CardContent class="stack is-xs">
               <span class="admin-stat-label">Collected</span>
               <span class="admin-stat-value">{money(totals(lots).collected)}</span>
               <span class="admin-stat-label">{totals(lots).paid} paid by card</span>
-            </div>
-          </div>
-          <div class="admin-stat card">
-            <div class="card-body stack is-xs">
+            </CardContent>
+          </Card>
+          <Card class="admin-stat">
+            <CardContent class="stack is-xs">
               <span class="admin-stat-label">Awaiting payment</span>
               <span class="admin-stat-value">{money(totals(lots).outstanding)}</span>
               <span class="admin-stat-label">{totals(lots).sold - totals(lots).paid} {totals(lots).sold - totals(lots).paid === 1 ? "winner" : "winners"} to pay</span>
-            </div>
-          </div>
-          <div class="admin-stat card">
-            <div class="card-body stack is-xs">
+            </CardContent>
+          </Card>
+          <Card class="admin-stat">
+            <CardContent class="stack is-xs">
               <span class="admin-stat-label">Bid on open lots</span>
               <span class="admin-stat-value">{money(totals(lots).live)}</span>
               <span class="admin-stat-label">{lots.filter((l) => l.status === "open").length} lots still open</span>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div class="results-wrap card">
-          <table class="results">
-            <thead>
-              <tr>
-                <th>Lot</th>
-                <th>Status</th>
-                <th>Winner</th>
-                <th class="num">Bids</th>
-                <th class="num">Amount</th>
-                <th>Payment</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr e:for={lot of lots.sort((a, b) => a.number - b.number)}>
-                <td>
-                  <a class="lot-cell row" href={`/lots/${lot.id}`}>
-                    <img src={coverPhoto(lot)} alt="" width="48" height="36">
-                    <span>{lot.number}. {lot.title}</span>
-                  </a>
-                </td>
-                <td>
-                  <span e:if={lot.status === "closed"} class="pill">Closed</span>
-                  <span e:elseif={isClosed(lot, clock.now)} class="pill is-warning">Closing</span>
-                  <span e:elseif={isClosingSoon(lot, clock.now)} class="pill is-danger"><span class="pill-dot"></span>{countdown(remainingMs(lot, clock.now))}</span>
-                  <span e:else class="pill is-info">{countdown(remainingMs(lot, clock.now))}</span>
-                </td>
-                <td>
-                  <span e:if={lot.status === "closed"}>{lot.winnerName ?? "No bids"}</span>
-                  <span e:else class="dim">{lot.topBidderName ? `Leading: ${lot.topBidderName}` : "No bids yet"}</span>
-                </td>
-                <td class="num">{lot.bidCount}</td>
-                <td class="num">{money(lot.currentBid)}</td>
-                <td>
-                  <span e:if={lot.paymentStatus === "paid"} class="pill is-success"><span class="pill-dot"></span>Paid</span>
-                  <span e:elseif={lot.paymentStatus === "unpaid"} class="pill is-warning"><span class="pill-dot"></span>Awaiting payment</span>
-                  <span e:else class="dim">–</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <Card class="results-wrap">
+          <Table label="Lot results">
+            <table class="results">
+              <thead>
+                <tr>
+                  <TableHead>Lot</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Winner</TableHead>
+                  <TableHead align="end">Bids</TableHead>
+                  <TableHead align="end">Amount</TableHead>
+                  <TableHead>Payment</TableHead>
+                </tr>
+              </thead>
+              <tbody>
+                <tr e:for={lot of lots.sort((a, b) => a.number - b.number)}>
+                  <TableCell>
+                    <a class="lot-cell row" href={`/lots/${lot.id}`}>
+                      <img src={coverPhoto(lot)} alt="" width="48" height="36">
+                      <span>{lot.number}. {lot.title}</span>
+                    </a>
+                  </TableCell>
+                  <TableCell>
+                    <Badge e:if={lot.status === "closed"} variant="secondary">Closed</Badge>
+                    <Badge e:elseif={isClosed(lot, clock.now)} variant="warning">Closing</Badge>
+                    <Badge e:elseif={isClosingSoon(lot, clock.now)} variant="danger" dot>{countdown(remainingMs(lot, clock.now))}</Badge>
+                    <Badge e:else variant="info">{countdown(remainingMs(lot, clock.now))}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span e:if={lot.status === "closed"}>{lot.winnerName ?? "No bids"}</span>
+                    <span e:else class="dim">{lot.topBidderName ? `Leading: ${lot.topBidderName}` : "No bids yet"}</span>
+                  </TableCell>
+                  <TableCell align="end">{lot.bidCount}</TableCell>
+                  <TableCell align="end">{money(lot.currentBid)}</TableCell>
+                  <TableCell>
+                    <Badge e:if={lot.paymentStatus === "paid"} variant="success" dot>Paid</Badge>
+                    <Badge e:elseif={lot.paymentStatus === "unpaid"} variant="warning" dot>Awaiting payment</Badge>
+                    <span e:else class="dim">–</span>
+                  </TableCell>
+                </tr>
+              </tbody>
+            </table>
+          </Table>
+        </Card>
       </main>
     </div>
   </body>
