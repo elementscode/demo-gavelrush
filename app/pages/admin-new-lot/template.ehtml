@@ -185,7 +185,7 @@ function previewUrl(file: File): string {
               </div>
 
               <Field label="Closes at" description="In your local time. A bid in the last two minutes adds two more." error={form.errors.closesAt?.[0] ?? ""}>
-                <div class="new-lot-pair">
+                <div class="new-lot-pair is-close">
                   <DatePicker value={form.closesDate} name="closesDate" required block attrs={{ id: "closesAt" }} />
                   <TimePicker value={form.closesTime} name="closesTime" label="Close time" required block />
                 </div>

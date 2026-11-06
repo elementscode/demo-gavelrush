@@ -22,3 +22,9 @@
   object-fit: cover;
   border-radius: var(--radius-md);
 }
+
+@media (max-width: 30rem) {
+  .new-lot-pair.is-close {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
