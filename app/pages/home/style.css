@@ -28,9 +28,8 @@
   font-size: var(--text-sm);
 }
 
-.lots-toolbar {
-  justify-content: space-between;
-  padding-bottom: var(--space-5);
+.lots-tabs {
+  gap: var(--space-5);
 }
 
 .lots-grid {
@@ -58,10 +57,6 @@
   height: 12rem;
   object-fit: cover;
   background: var(--bg-muted);
-}
-
-.lot-card-body {
-  padding: var(--space-4) var(--space-5) var(--space-5);
 }
 
 .lot-card-title {
@@ -125,18 +120,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.lots-empty {
-  padding: var(--space-12) 0;
-  text-align: center;
-  color: var(--ink-soft);
-}
-
-.lots-toolbar .tab-list {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-
 @media (max-width: 40rem) {
   .lots-hero {
     padding-block: var(--space-8) var(--space-6);
@@ -149,13 +132,4 @@
   .lots-stats {
     gap: var(--space-6);
   }
-
-  .lots-toolbar .tab {
-    padding-inline: var(--space-3);
-  }
-}
-
-.lots-toolbar .tabs {
-  min-width: 0;
-  max-width: 100%;
 }

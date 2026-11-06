@@ -3,6 +3,10 @@ import { LiveView } from "@elements/app";
 import favicon from "#app/shared/assets/favicons/favicon.svg";
 import { SiteHeader } from "#app/shared/templates/site-header";
 import { WatchToggle } from "#app/shared/templates/watch-toggle";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@elements/ui/tabs";
+import { Badge } from "@elements/ui/badge";
+import { Card, CardContent } from "@elements/ui/card";
+import { Empty } from "@elements/ui/empty";
 import {
   LotRow,
   WatchRow,
@@ -84,43 +88,38 @@ function totalBids(lots: LiveView<LotRow>): number {
           </div>
         </section>
 
-        <div class="lots-toolbar cluster">
-          <div class="tabs">
-            <div class="tab-list" role="tablist">
-              <button type="button" role="tab" class={["tab", view.filter === "all" && "is-active"]} aria-selected={view.filter === "all"} onclick={() => view.filter = "all"}>All lots</button>
-              <button type="button" role="tab" class={["tab", view.filter === "soon" && "is-active"]} aria-selected={view.filter === "soon"} onclick={() => view.filter = "soon"}>Closing today</button>
-              <button e:if={watches} type="button" role="tab" class={["tab", view.filter === "watching" && "is-active"]} aria-selected={view.filter === "watching"} onclick={() => view.filter = "watching"}>Watching</button>
-              <button type="button" role="tab" class={["tab", view.filter === "closed" && "is-active"]} aria-selected={view.filter === "closed"} onclick={() => view.filter = "closed"}>Closed</button>
-            </div>
-          </div>
-        </div>
+        <Tabs value={view.filter} class="lots-tabs">
+          <TabsList label="Filter lots">
+            <TabsTrigger value="all">All lots</TabsTrigger>
+            <TabsTrigger value="soon">Closing today</TabsTrigger>
+            <TabsTrigger e:if={watches} value="watching">Watching</TabsTrigger>
+            <TabsTrigger value="closed">Closed</TabsTrigger>
+          </TabsList>
 
-        <div e:if={visibleLots(lots, watches, view.filter, clock.now).length > 0} class="lots-grid">
-          <LotCard e:for={lot of visibleLots(lots, watches, view.filter, clock.now)} {lot} {watches} {clock} />
-        </div>
-        <p e:else class="lots-empty">
-          {view.filter === "watching" ? "You aren't watching any lots yet. Tap Watch on a lot to follow it." : "No lots here right now."}
-        </p>
+          <TabsContent value={view.filter}>
+            <div e:if={visibleLots(lots, watches, view.filter, clock.now).length > 0} class="lots-grid">
+              <LotCard e:for={lot of visibleLots(lots, watches, view.filter, clock.now)} {lot} {watches} {clock} />
+            </div>
+            <Empty e:else description={view.filter === "watching" ? "You aren't watching any lots yet. Tap Watch on a lot to follow it." : "No lots here right now."} />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   </body>
 </html>
 
 <LotCard (lot: LotRow, watches: LiveView<WatchRow> | null, clock: Clock)>
-  <article class="lot-card card">
+  <Card class="lot-card">
     <img class="lot-card-photo" src={coverPhoto(lot)} alt="" width="480" height="320" loading="lazy">
 
     <div class="lot-card-tags row">
-      <span class="pill">Lot {lot.number}</span>
-      <span e:if={isClosed(lot, clock.now)} class="pill">Closed</span>
-      <span e:elseif={isClosingSoon(lot, clock.now)} class="pill is-danger countdown">
-        <span class="pill-dot"></span>
-        {countdown(remainingMs(lot, clock.now))}
-      </span>
-      <span e:else class="pill countdown">{countdown(remainingMs(lot, clock.now))}</span>
+      <Badge variant="secondary">Lot {lot.number}</Badge>
+      <Badge e:if={isClosed(lot, clock.now)} variant="secondary">Closed</Badge>
+      <Badge e:elseif={isClosingSoon(lot, clock.now)} variant="danger" dot class="countdown">{countdown(remainingMs(lot, clock.now))}</Badge>
+      <Badge e:else variant="secondary" class="countdown">{countdown(remainingMs(lot, clock.now))}</Badge>
     </div>
 
-    <div class="lot-card-body stack is-md">
+    <CardContent class="lot-card-body stack is-md">
       <h2 class="lot-card-title"><a href={`/lots/${lot.id}`}>{lot.title}</a></h2>
 
       <div class="lot-card-meta row">
@@ -132,6 +131,6 @@ function totalBids(lots: LiveView<LotRow>): number {
         </div>
         <WatchToggle {watches} lotId={lot.id} />
       </div>
-    </div>
-  </article>
+    </CardContent>
+  </Card>
 </LotCard>
