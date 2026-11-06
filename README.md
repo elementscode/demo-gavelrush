@@ -6,6 +6,8 @@
 
 Lots with photos and countdowns, bids at a set increment, late bids that extend the close, outbid emails, and pay-by-card links.
 
+Gavelrush uses the `luxury` theme from @elements/ui.
+
 [Run this app on your machine](https://elements.dev/demos/01a0f446-8df0-7740-8f04-4a1ad444930e). Use this demo as inspiration, or as the starting point for your own app. Your agent creates a new app with this one as the scaffold, and you prompt it to add whatever features you want.
 
 ## Payments
