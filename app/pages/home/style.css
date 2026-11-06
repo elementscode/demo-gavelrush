@@ -40,6 +40,7 @@
 }
 
 .lot-card {
+  --card-spacing: var(--surface-padding-sm);
   position: relative;
   overflow: hidden;
   padding: 0;
