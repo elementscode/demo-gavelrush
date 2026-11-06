@@ -3,6 +3,10 @@ import favicon from "#app/shared/assets/favicons/favicon.svg";
 import { redirect } from "@elements/app";
 import { SiteHeader } from "#app/shared/templates/site-header";
 import { money, photoUrl } from "#app/shared/lot";
+import { Alert } from "@elements/ui/alert";
+import { Badge } from "@elements/ui/badge";
+import { Button } from "@elements/ui/button";
+import { Card } from "@elements/ui/card";
 import { payTestLot, TestCheckoutLot } from "./services";
 
 interface PayState {
@@ -37,7 +41,7 @@ async function onPay(state: PayState, lotId: string) {
       <SiteHeader />
 
       <main class="page-shell checkout-page">
-        <div class="checkout card">
+        <Card class="checkout">
           <section class="checkout-summary stack is-lg">
             <a class="checkout-back link-muted" href={`/lots/${lot.id}`}>← Back to the lot</a>
 
@@ -69,23 +73,23 @@ async function onPay(state: PayState, lotId: string) {
 
           <section class="checkout-pay stack is-lg">
             <div class="stack is-sm">
-              <span class="pill is-warning checkout-badge"><span class="pill-dot"></span>Test mode</span>
+              <Badge variant="warning" dot class="checkout-badge">Test mode</Badge>
               <h1 class="checkout-title">Confirm your payment</h1>
               <p class="checkout-sub">This test checkout records the payment the way Stripe would, so the lot is marked paid everywhere it shows. No card is charged.</p>
             </div>
 
-            <p e:if={pay.error} class="callout is-danger" role="alert">{pay.error}</p>
+            <Alert e:if={pay.error} variant="danger" description={pay.error} />
 
             <div class="stack is-sm">
-              <button class="is-primary is-block is-lg" disabled={pay.busy} onclick={() => onPay(pay, lot.id)}>
-                {pay.busy ? "Paying…" : `Pay ${money(lot.amount)}`}
-              </button>
-              <a class="button is-ghost is-block" href={`/lots/${lot.id}`}>Cancel</a>
+              <Button variant="primary" size="lg" block loading={pay.busy} onclick={() => onPay(pay, lot.id)}>
+                Pay {money(lot.amount)}
+              </Button>
+              <Button variant="ghost" block href={`/lots/${lot.id}`}>Cancel</Button>
             </div>
 
             <p class="checkout-note">Add <code>STRIPE_SECRET_KEY</code> to <code>config/env/development.env</code> and this button opens real Stripe Checkout instead.</p>
           </section>
-        </div>
+        </Card>
       </main>
     </div>
   </body>
